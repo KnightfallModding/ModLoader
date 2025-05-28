@@ -208,6 +208,13 @@ internal static class MonoHandler
             &bootstrapHandle
         };
         Mono.RuntimeInvoke(initMethod, 0, (void**)initArgs, ref ex);
+        if (ex != 0)
+        {
+            Core.Logger.Error("Failed to invoke the managed init function");
+            var error = Mono.MonoObjectToString(ex);
+            if (error != null)
+                Core.Logger.Error(error);
+        }
     }
 
     internal static void InstallHooks()
