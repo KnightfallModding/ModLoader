@@ -134,7 +134,6 @@ namespace MelonLoader
             Fixes.ProcessFix.Install();
 
 #if NET6_0_OR_GREATER
-            Fixes.AsmResolverFix.Install();
             Fixes.Il2CppInteropExceptionLog.Install();
 
 #if OSX
@@ -149,12 +148,10 @@ namespace MelonLoader
 
             PatchShield.Install();
 
-            if (MelonUtils.CurrentPlatform == MelonPlatformAttribute.CompatiblePlatforms.WINDOWS_X86
-                || MelonUtils.CurrentPlatform == MelonPlatformAttribute.CompatiblePlatforms.WINDOWS_X64)
-            {
-                Fixes.WindowsUnhandledQuit.Install();
-                MelonEvents.OnUpdate.Subscribe(Fixes.WindowsUnhandledQuit.Update, int.MaxValue);
-            }
+#if WINDOWS
+            Fixes.WindowsUnhandledQuit.Install();
+            MelonEvents.OnUpdate.Subscribe(Fixes.WindowsUnhandledQuit.Update, int.MaxValue);
+#endif
 
             MelonPreferences.Load();
 

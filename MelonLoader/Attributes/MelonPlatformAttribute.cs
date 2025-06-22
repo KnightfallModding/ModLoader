@@ -12,8 +12,14 @@ namespace MelonLoader
         public enum CompatiblePlatforms
         {
             UNIVERSAL,
-            WINDOWS_X86,
-            WINDOWS_X64
+            WINDOWS,
+            LINUX,
+            ANDROID,
+            MAC,
+
+            // Obsolete
+            WINDOWS_X86 = WINDOWS,
+            WINDOWS_X64 = WINDOWS,
         };
 
         // <summary>Platforms Compatible with the Melon.</summary>

@@ -49,8 +49,14 @@ namespace MelonLoader
             UnityInformationHandler.Setup();
 
             CurrentGameAttribute = new MelonGameAttribute(UnityInformationHandler.GameDeveloper, UnityInformationHandler.GameName);
-            CurrentPlatform = IsGame32Bit() ? MelonPlatformAttribute.CompatiblePlatforms.WINDOWS_X86 : MelonPlatformAttribute.CompatiblePlatforms.WINDOWS_X64;
             CurrentDomain = IsGameIl2Cpp() ? MelonPlatformDomainAttribute.CompatibleDomains.IL2CPP : MelonPlatformDomainAttribute.CompatibleDomains.MONO;
+
+            if (IsWindows)
+                CurrentPlatform = MelonPlatformAttribute.CompatiblePlatforms.WINDOWS;
+            if (IsUnix)
+                CurrentPlatform = MelonPlatformAttribute.CompatiblePlatforms.LINUX;
+            if (IsMac)
+                CurrentPlatform = MelonPlatformAttribute.CompatiblePlatforms.MAC;
         }
 
         [Obsolete("Use MelonEnvironment.MelonBaseDirectory instead. This will be removed in a future update.", true)]
