@@ -52,7 +52,7 @@ namespace MelonLoader
             CurrentDomain = IsGameIl2Cpp() ? MelonPlatformDomainAttribute.CompatibleDomains.IL2CPP : MelonPlatformDomainAttribute.CompatibleDomains.MONO;
 
             if (IsWindows)
-                CurrentPlatform = MelonPlatformAttribute.CompatiblePlatforms.WINDOWS;
+                CurrentPlatform = IsGame32Bit() ? MelonPlatformAttribute.CompatiblePlatforms.WINDOWS_X86 : MelonPlatformAttribute.CompatiblePlatforms.WINDOWS_X64;
             if (IsUnix)
                 CurrentPlatform = MelonPlatformAttribute.CompatiblePlatforms.LINUX;
             if (IsMac)
