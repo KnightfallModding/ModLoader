@@ -61,7 +61,7 @@
         <EmbeddedResource Include="Resources\classdata.tpk" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="$(SolutionDir)/MelonLoader.Bootstrap/Logging/ColorRGB.cs" Link="Utils\ColorRGB.cs" />
+        <Compile Include="$(SolutionDir)/MelonLoader.Bootstrap/Logging/ColorARGB.cs" Link="Utils\ColorARGB.cs" />
         <Compile Include="$(SolutionDir)/MelonLoader.Bootstrap/SharedDelegates.cs" Link="BootstrapUtils/SharedDelegates.cs" />
     </ItemGroup>
 </Project>
