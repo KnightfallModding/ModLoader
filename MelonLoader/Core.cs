@@ -62,7 +62,7 @@ namespace MelonLoader
             DetourHelper.Native = new DetourNativeMonoPosixPlatform(new DetourNativeX86Platform());
 #endif
 
-            HarmonyInstance = new HarmonyLib.Harmony(BuildInfo.Name);
+            HarmonyInstance = new HarmonyLib.Harmony(Properties.BuildInfo.Name);
 
 #if !WINDOWS && !NET6_0_OR_GREATER
             Fixes.XTermFix.Install();
@@ -157,7 +157,7 @@ namespace MelonLoader
 
             MelonCompatibilityLayer.LoadModules();
 
-            bHapticsManager.Connect(BuildInfo.Name, UnityInformationHandler.GameName);
+            bHapticsManager.Connect(Properties.BuildInfo.Name, UnityInformationHandler.GameName);
 
             MelonFolderHandler.ScanForFolders();
             MelonFolderHandler.LoadMelons(MelonFolderHandler.ScanType.UserLibs);
@@ -217,7 +217,7 @@ namespace MelonLoader
         {
             var lemon = LoaderConfig.Current.Loader.Theme == LoaderConfig.CoreConfig.LoaderTheme.Lemon;
             var versionStr = $"{(lemon ? "Lemon" : "Melon")}Loader " +
-                             $"v{BuildInfo.Version} " +
+                             $"v{Properties.BuildInfo.Version} " +
                              $"{(Is_ALPHA_PreRelease ? "ALPHA Pre-Release" : "Open-Beta")}";
             return versionStr;
         }
