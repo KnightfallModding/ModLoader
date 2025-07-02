@@ -1,4 +1,4 @@
-﻿using MelonLoader.Bootstrap.Utils;
+﻿﻿using MelonLoader.Bootstrap.Utils;
 using System.Runtime.InteropServices;
 
 namespace MelonLoader.Bootstrap.RuntimeHandlers.Mono;
@@ -32,6 +32,7 @@ internal class MonoLib
     public required InstallAssemblySearchHookFn InstallAssemblySearchHook { get; init; }
     public required FreeFn Free { get; init; }
     public required StringToUtf8Fn StringToUtf8 { get; init; }
+    public required ObjectGetClassFn ObjectGetClass { get; init; }
 
     public DomainSetConfigFn? DomainSetConfig { get; init; }
     public DebugEnabledFn? DebugEnabled { get; init; }
@@ -61,7 +62,8 @@ internal class MonoLib
             || !NativeFunc.GetExport<ClassGetMethodFromNameFn>(hRuntime, "mono_class_get_method_from_name", out var classGetMethodFromName)
             || !NativeFunc.GetExport<InstallAssemblySearchHookFn>(hRuntime, "mono_install_assembly_search_hook", out var installAssemblySearchHook)
             || (!NativeFunc.GetExport<FreeFn>(hRuntime, "mono_free", out var free) && !NativeFunc.GetExport<FreeFn>(hRuntime, "g_free", out free))
-            || !NativeFunc.GetExport<StringToUtf8Fn>(hRuntime, "mono_string_to_utf8", out var stringToUtf8))
+            || !NativeFunc.GetExport<StringToUtf8Fn>(hRuntime, "mono_string_to_utf8", out var stringToUtf8)
+            || !NativeFunc.GetExport<ObjectGetClassFn>(hRuntime, "mono_object_get_class", out var objectGetClass))
             return null;
 
         var debugEnabled = NativeFunc.GetExport<DebugEnabledFn>(hRuntime, "mono_debug_enabled");
@@ -94,7 +96,8 @@ internal class MonoLib
             ConfigParse = configParse,
             StringToUtf8 = stringToUtf8,
             Free = free,
-            ObjectToString = objectToString
+            ObjectToString = objectToString,
+            ObjectGetClass = objectGetClass
         };
     }
 
@@ -120,18 +123,14 @@ internal class MonoLib
         }
     }
 
-    public string? MonoObjectToString(nint obj)
+    public void LogMonoException(nint exceptionObject)
     {
-        // TODO: Implement this for old mono
-        if (ObjectToString == null)
-            return null;
-
-        nint ex = 0;
-        var monoStr = ObjectToString(obj, ref ex);
-        if (ex != 0)
-            return null;
-
-        return MonoStringToString(monoStr);
+        if (exceptionObject == 0)
+            return;
+        string? returnstr = MonoObjectToString(exceptionObject);
+        if (returnstr == null)
+            return;
+        Core.Logger.Error(returnstr);
     }
 
     public string? MonoStringToString(nint monoString)
@@ -146,6 +145,38 @@ internal class MonoLib
         var str = Marshal.PtrToStringUTF8(cStr);
         Free(cStr);
         return str;
+    }
+
+    unsafe public string? MonoObjectToString(nint obj)
+    {
+        nint monoStr = 0;
+        nint ex = 0;
+
+        if (ObjectToString != null)
+            monoStr = ObjectToString(obj, ref ex);
+        else
+        {
+            nint objClass = ObjectGetClass(obj);
+            if (objClass == 0)
+                return null;
+
+            nint method = ClassGetMethodFromName(objClass, "ToString", 0);
+            if (method == 0)
+                return null;
+
+            var initArgs = stackalloc nint*[0];
+            monoStr = RuntimeInvoke(method, obj, (void**)initArgs, ref ex);
+        }
+
+        if (ex != 0)
+        {
+            Free(monoStr);
+            return null;
+        }
+
+        string? ret = MonoStringToString(monoStr);
+        Free(monoStr);
+        return ret;
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -184,7 +215,11 @@ internal class MonoLib
     public delegate nint ObjectToStringFn(nint obj, ref nint ex);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public delegate nint StringToUtf8Fn(nint str);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate nint ObjectGetClassFn(nint obj);
 
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
+    public delegate string StringToUtf16Fn(nint str);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     public delegate void AddInternalCallFn(string name, nint func);
 
@@ -217,14 +252,15 @@ internal class MonoLib
         MONO_DEBUG_FORMAT_MONO,
         MONO_DEBUG_FORMAT_DEBUGGER
     }
-    
-    public enum MonoImageOpenStatus {
+
+    public enum MonoImageOpenStatus
+    {
         MONO_IMAGE_OK,
         MONO_IMAGE_ERROR_ERRNO,
         MONO_IMAGE_MISSING_ASSEMBLYREF,
         MONO_IMAGE_IMAGE_INVALID
     }
-    
+
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct AssemblyName
     {
