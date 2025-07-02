@@ -13,6 +13,11 @@ internal static class MelonFolderHandler
     private static List<string> _pluginDirs = [];
     private static List<string> _modDirs = [];
 
+    private static List<string> _startExclusions = [
+        "~",
+        "."
+    ];
+
     internal enum ScanType
     {
         UserLibs,
@@ -101,6 +106,14 @@ internal static class MelonFolderHandler
         MelonLogger.Msg(loadingMsg);
     }
 
+    private static bool IsExcluded(string name)
+    {
+        foreach (string str in _startExclusions)
+            if (name.StartsWith(str))
+                return true;
+        return false;
+    }
+
     private static List<T> LoadMelons<T>(List<MelonAssembly> melonAssemblies)
         where T : MelonTypeBase<T>
     {
@@ -132,7 +145,7 @@ internal static class MelonFolderHandler
         ref List<string> modDirectories)
     {
         string directoryName = Path.GetFileName(path);
-        if (directoryName.StartsWith("~"))
+        if (IsExcluded(directoryName))
             return;
 
         // Get Directories
@@ -148,7 +161,7 @@ internal static class MelonFolderHandler
                 continue;
 
             directoryName = Path.GetFileName(dir);
-            if (directoryName.StartsWith("~"))
+            if (IsExcluded(directoryName))
                 continue;
 
             List<string> dirList = scanType switch
