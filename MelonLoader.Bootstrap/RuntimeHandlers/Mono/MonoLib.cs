@@ -30,9 +30,12 @@ internal class MonoLib
     public required ClassFromNameFn ClassFromName { get; init; }
     public required ClassGetMethodFromNameFn ClassGetMethodFromName { get; init; }
     public required InstallAssemblySearchHookFn InstallAssemblySearchHook { get; init; }
+    public required FreeFn Free { get; init; }
+    public required StringToUtf8Fn StringToUtf8 { get; init; }
 
     public DomainSetConfigFn? DomainSetConfig { get; init; }
     public DebugEnabledFn? DebugEnabled { get; init; }
+    public ObjectToStringFn? ObjectToString { get; init; }
 
     public static MonoLib? TryLoad(nint hRuntime)
     {
@@ -56,11 +59,14 @@ internal class MonoLib
             || !NativeFunc.GetExport<AssemblyGetImageFn>(hRuntime, "mono_assembly_get_image", out var assemblyGetImage)
             || !NativeFunc.GetExport<ClassFromNameFn>(hRuntime, "mono_class_from_name", out var classFromName)
             || !NativeFunc.GetExport<ClassGetMethodFromNameFn>(hRuntime, "mono_class_get_method_from_name", out var classGetMethodFromName)
-            || !NativeFunc.GetExport<InstallAssemblySearchHookFn>(hRuntime, "mono_install_assembly_search_hook", out var installAssemblySearchHook))
+            || !NativeFunc.GetExport<InstallAssemblySearchHookFn>(hRuntime, "mono_install_assembly_search_hook", out var installAssemblySearchHook)
+            || (!NativeFunc.GetExport<FreeFn>(hRuntime, "mono_free", out var free) && !NativeFunc.GetExport<FreeFn>(hRuntime, "g_free", out free))
+            || !NativeFunc.GetExport<StringToUtf8Fn>(hRuntime, "mono_string_to_utf8", out var stringToUtf8))
             return null;
 
         var debugEnabled = NativeFunc.GetExport<DebugEnabledFn>(hRuntime, "mono_debug_enabled");
         var domainSetConfig = NativeFunc.GetExport<DomainSetConfigFn>(hRuntime, "mono_domain_set_config");
+        var objectToString = NativeFunc.GetExport<ObjectToStringFn>(hRuntime, "mono_object_to_string");
 
         return new()
         {
@@ -85,7 +91,10 @@ internal class MonoLib
             ImageOpenFromDataWithName = imageOpenFromDataWithName,
             InstallAssemblySearchHook = installAssemblySearchHook,
             DomainSetConfig = domainSetConfig,
-            ConfigParse = configParse
+            ConfigParse = configParse,
+            StringToUtf8 = stringToUtf8,
+            Free = free,
+            ObjectToString = objectToString
         };
     }
 
@@ -109,6 +118,34 @@ internal class MonoLib
             passedDelegates.Add(searchHook);
             InstallAssemblySearchHook(searchHook, 0);
         }
+    }
+
+    public string? MonoObjectToString(nint obj)
+    {
+        // TODO: Implement this for old mono
+        if (ObjectToString == null)
+            return null;
+
+        nint ex = 0;
+        var monoStr = ObjectToString(obj, ref ex);
+        if (ex != 0)
+            return null;
+
+        return MonoStringToString(monoStr);
+    }
+
+    public string? MonoStringToString(nint monoString)
+    {
+        if (monoString == 0)
+            return null;
+
+        var cStr = StringToUtf8(monoString);
+        if (cStr == 0)
+            return null;
+
+        var str = Marshal.PtrToStringUTF8(cStr);
+        Free(cStr);
+        return str;
     }
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
@@ -144,10 +181,10 @@ internal class MonoLib
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     public unsafe delegate void* StringNewFn(nint domain, nint value);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    public delegate nint ObjectToStringFn(nint obj, nint ex);
+    public delegate nint ObjectToStringFn(nint obj, ref nint ex);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate nint StringToUtf8Fn(nint str);
 
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Unicode)]
-    public delegate string StringToUtf16Fn(nint str);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     public delegate void AddInternalCallFn(string name, nint func);
 
@@ -165,6 +202,9 @@ internal class MonoLib
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     public delegate void ConfigParseFn(string? configPath);
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void FreeFn(nint ptr);
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
     public unsafe delegate nint ImageOpenFromDataWithNameFn(byte* data, uint dataLen, bool needCopy, ref MonoImageOpenStatus status, bool refonly, string name);
