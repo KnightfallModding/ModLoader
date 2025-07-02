@@ -54,6 +54,8 @@ public static class Core
             return;
 
         MelonLogger.Init();
+        if (!LoaderConfig.Current.Loader.CapturePlayerLogs)
+            ConsoleHandler.NullHandles();
 
 #if LINUX || OSX
         PltHook.InstallHooks
@@ -77,7 +79,12 @@ public static class Core
 
         MelonDebug.Log($"Redirecting {symbolName}");
         if (!_runtimeInitialised)
+        {
             redirect.InitMethod(handle);
+            if (!LoaderConfig.Current.Loader.CapturePlayerLogs)
+                ConsoleHandler.ResetHandles();
+        }
+
         _runtimeInitialised = true;
         return redirect.detourPtr;
     }
