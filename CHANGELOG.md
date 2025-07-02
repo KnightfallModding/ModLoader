@@ -1,5 +1,6 @@
 | Versions: |
 | - |
+| [v0.7.2](#v072) |
 | [v0.7.1](#v071) |
 | [v0.7.0](#v070) |
 | [v0.6.6](#v066) |
@@ -37,6 +38,19 @@
 | [v0.0.3](#v003) |
 | [v0.0.2](#v002) |
 | [v0.0.1](#v001) |
+
+---
+
+### v0.7.2
+
+1. Removed Unneeded AsmResolverFix
+2. Fixed an issue with Platform Specification being incorrect on Platforms other than Windows
+3. Fixed Incorrect BuildInfo Values
+4. Implemented Backwards Compatibility for MelonLoader.BuildInfo to use MelonLoader.Properties.BuildInfo
+5. Fixed ColorARGB File Name to match the Class
+6. Fixed an issue with capturing stdout / stderr when capture player logs is disabled   (Credits to [aldelaro5](https://github.com/aldelaro5) :D)
+7. Added "." as a starting exclusion for Melon Folders
+8. Implemented Exception Logging for Mono Invokes   (Credits to [slxdy](https://github.com/slxdy) :D)
 
 ---
 
