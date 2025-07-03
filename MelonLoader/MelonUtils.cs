@@ -299,17 +299,7 @@ namespace MelonLoader
 
         public static T[] PullAttributesFromAssembly<T>(Assembly asm, bool inherit = false) where T : Attribute
         {
-            Attribute[] att_tbl = null;
-            
-            try
-            {
-                att_tbl = Attribute.GetCustomAttributes(asm, inherit);
-            }
-            catch
-            {
-                att_tbl = null;
-            }
-
+            Attribute[] att_tbl = Attribute.GetCustomAttributes(asm, inherit);
             if ((att_tbl == null) || (att_tbl.Length <= 0))
                 return null;
 
