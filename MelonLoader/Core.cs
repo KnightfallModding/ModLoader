@@ -141,7 +141,7 @@ namespace MelonLoader
             Fixes.NativeLibraryFix.Install();
 #endif
 
-            //Fixes.Il2CppInteropFixes.Install();
+            Fixes.Il2CppInteropFixes.Install();
 
             Fixes.Il2CppICallInjector.Install();
 #endif
@@ -260,7 +260,7 @@ namespace MelonLoader
             bHapticsManager.Disconnect();
 
 #if NET6_0_OR_GREATER
-            //Fixes.Il2CppInteropFixes.Shutdown();
+            Fixes.Il2CppInteropFixes.Shutdown();
             Fixes.Il2CppICallInjector.Shutdown();
 #endif
 

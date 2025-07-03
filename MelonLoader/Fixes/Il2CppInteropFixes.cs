@@ -19,6 +19,9 @@ using Il2CppInterop.HarmonySupport;
 
 #pragma warning disable CS8632
 
+// Herp: This is extremely dirty way of implementing these fixes.
+//       These fixes are unfortunately required for Il2CppInterop Wrapper Generation to function correctly on a lot of Il2Cpp Games.
+//       DO NOT REMOVE!
 namespace MelonLoader.Fixes
 {
     // fixes: https://github.com/BepInEx/Il2CppInterop/pull/103
