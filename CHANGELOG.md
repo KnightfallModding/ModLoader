@@ -51,6 +51,9 @@
 6. Fixed an issue with capturing stdout / stderr when capture player logs is disabled   (Credits to [aldelaro5](https://github.com/aldelaro5) :D)
 7. Added "." as a starting exclusion for Melon Folders
 8. Implemented Exception Logging for Mono Invokes   (Credits to [slxdy](https://github.com/slxdy) :D)
+9. Reimplemented Il2CppInteropFixes
+10. Removed broken ClassInjector.SystemTypeFromIl2CppType Il2CppInterop fix
+11. Fixed an issue with Melon Attribute checks not gracefully failing when an Exception is Thrown
 
 ---
 
