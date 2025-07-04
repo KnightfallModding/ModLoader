@@ -64,38 +64,7 @@ namespace MelonLoader
         public static T Clamp<T>(T value, T min, T max) where T : IComparable<T> { if (value.CompareTo(min) < 0) return min; if (value.CompareTo(max) > 0) return max; return value; }
         public static string HashCode { get; private set; }
 
-        // public static int RandomInt()
-        // {
-        //     lock (RandomNumGen)
-        //         return RandomNumGen.Next();
-        // }
-        //
-        // public static int RandomInt(int max)
-        // {
-        //     lock (RandomNumGen)
-        //         return RandomNumGen.Next(max);
-        // }
-        //
-        // public static int RandomInt(int min, int max)
-        // {
-        //     lock (RandomNumGen)
-        //         return RandomNumGen.Next(min, max);
-        // }
-        //
-        // public static double RandomDouble()
-        // {
-        //     lock (RandomNumGen)
-        //         return RandomNumGen.NextDouble();
-        // }
-        //
-        // public static string RandomString(int length)
-        // {
-        //     StringBuilder builder = new();
-        //     for (int i = 0; i < length; i++)
-        //         builder.Append(Convert.ToChar(Convert.ToInt32(Math.Floor(25 * RandomDouble())) + 65));
-        //     return builder.ToString();
-        // }
-
+        // TO-DO: Remove this
         public static unsafe bool IsGame32Bit() =>
 #if X64
             false;
@@ -103,9 +72,15 @@ namespace MelonLoader
             true;
 #endif
 
+        // TO-DO: Replace Method Body with Value returned from Bootstrap
+        public static bool IsGameIl2Cpp() =>
+#if NET6_0_OR_GREATER
+            true;
+#else
+            false;
+#endif
 
-        public static bool IsGameIl2Cpp() => Directory.Exists(MelonEnvironment.Il2CppDataDirectory);
-
+        // TO-DO: Replace Method Body with Value returned from Bootstrap
         public static bool IsOldMono()
         {
 #if OSX
@@ -690,5 +665,37 @@ namespace MelonLoader
         //[MethodImpl(MethodImplOptions.InternalCall)]
         //[return: MarshalAs(UnmanagedType.LPStr)]
         //private extern static string Internal_GetGameDirectory();
+
+        // public static int RandomInt()
+        // {
+        //     lock (RandomNumGen)
+        //         return RandomNumGen.Next();
+        // }
+        //
+        // public static int RandomInt(int max)
+        // {
+        //     lock (RandomNumGen)
+        //         return RandomNumGen.Next(max);
+        // }
+        //
+        // public static int RandomInt(int min, int max)
+        // {
+        //     lock (RandomNumGen)
+        //         return RandomNumGen.Next(min, max);
+        // }
+        //
+        // public static double RandomDouble()
+        // {
+        //     lock (RandomNumGen)
+        //         return RandomNumGen.NextDouble();
+        // }
+        //
+        // public static string RandomString(int length)
+        // {
+        //     StringBuilder builder = new();
+        //     for (int i = 0; i < length; i++)
+        //         builder.Append(Convert.ToChar(Convert.ToInt32(Math.Floor(25 * RandomDouble())) + 65));
+        //     return builder.ToString();
+        // }
     }
 }
