@@ -11,23 +11,18 @@
         <NoWarn>LNK4099</NoWarn>
         <InvariantGlobalization>true</InvariantGlobalization>
         <CETCompat>false</CETCompat>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(RuntimeIdentifier.StartsWith(`win-`))' == 'true'">
-		<DefineConstants>WINDOWS;BOOTSTRAP</DefineConstants>
+		<DefineConstants>$(DefineConstants);BOOTSTRAP</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(RuntimeIdentifier.StartsWith(`linux-`))' == 'true'">
         <ExportsFile>linuxexports.def</ExportsFile>
         <LinkStandardCPlusPlusLibrary>true</LinkStandardCPlusPlusLibrary>
-		<DefineConstants>LINUX;BOOTSTRAP</DefineConstants>
     </PropertyGroup>
 	
     <PropertyGroup Condition="'$(RuntimeIdentifier.StartsWith(`osx-`))' == 'true'">
         <ExportsFile>osxexports.def</ExportsFile>
         <OSXEntryPath>Deps/$(RuntimeIdentifier)/osxentry.o</OSXEntryPath>
         <LinkStandardCPlusPlusLibrary>true</LinkStandardCPlusPlusLibrary>
-		<DefineConstants>OSX;BOOTSTRAP</DefineConstants>
     </PropertyGroup>
     
     <Target Condition="'$(RuntimeIdentifier.StartsWith(`osx-`))' == 'true'" Name="BuildOSXEntry" BeforeTargets="Build">
