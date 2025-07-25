@@ -151,9 +151,10 @@ internal static class MelonFolderHandler
             ScanType.Mods => modDirectories,
             _ => throw new ArgumentOutOfRangeException(nameof(scanType), scanType, null)
         };
-
         dirList.Add(path);
-        FindSubFolders(scanType, path, ref userLibDirectories, ref pluginDirectories, ref modDirectories);
+
+        if (!LoaderConfig.Current.Loader.DisableSubFolderLoad)
+            FindSubFolders(scanType, path, ref userLibDirectories, ref pluginDirectories, ref modDirectories);
     }
 
     private static void FindSubFolders(ScanType scanType,
@@ -182,9 +183,12 @@ internal static class MelonFolderHandler
             if (IsExcluded(directoryName))
                 continue;
 
-            string manifestFilePath = Path.Combine(dir, "manifest.json");
-            if (!File.Exists(manifestFilePath))
-                continue;
+            if (!LoaderConfig.Current.Loader.DisableSubFolderManifest)
+            {
+                string manifestFilePath = Path.Combine(dir, "manifest.json");
+                if (!File.Exists(manifestFilePath))
+                    continue;
+            }
 
             ScanFolder(scanType, dir, ref userLibDirectories, ref pluginDirectories, ref modDirectories);
         }
