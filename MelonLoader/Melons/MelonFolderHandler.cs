@@ -138,13 +138,12 @@ public static class MelonFolderHandler
     }
 
     private static bool IsNameExcluded(LemonTuple<eNameExclusionType, string> tuple,
-        string name,
-        string nameLower)
+        string name)
         => tuple.Item1 switch
         {
-            eNameExclusionType.EXACT_MATCH => ((tuple.Item2 == name) || (tuple.Item2 == nameLower)),
-            eNameExclusionType.STARTS_WITH => (name.StartsWith(tuple.Item2) || nameLower.StartsWith(tuple.Item2)),
-            eNameExclusionType.ENDS_WITH => (name.EndsWith(tuple.Item2) || nameLower.EndsWith(tuple.Item2)),
+            eNameExclusionType.EXACT_MATCH => (tuple.Item2 == name),
+            eNameExclusionType.STARTS_WITH => name.StartsWith(tuple.Item2),
+            eNameExclusionType.ENDS_WITH => name.EndsWith(tuple.Item2),
             _ => false,
         };
 
@@ -155,9 +154,8 @@ public static class MelonFolderHandler
             if (exclusion == path)
                 return true;
 
-        string nameLower = name.ToLower();
         foreach (var tuple in _nameExclusions)
-            if (IsNameExcluded(tuple, name, nameLower))
+            if (IsNameExcluded(tuple, name))
                 return true;
 
         return false;
