@@ -43,9 +43,7 @@ internal static class MelonFolderHandler
             MelonUtils.AddNativeDLLDirectory(directory);
             Resolver.MelonAssemblyResolver.AddSearchDirectory(directory);
         }
-#if NET6_0_OR_GREATER
-        Resolver.MelonAssemblyResolver.AddSearchDirectory(MelonEnvironment.Il2CppAssembliesDirectory);
-#endif
+
         foreach (string directory in _pluginDirs)
             Resolver.MelonAssemblyResolver.AddSearchDirectory(directory);
         foreach (string directory in _modDirs)
