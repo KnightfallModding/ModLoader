@@ -6,16 +6,26 @@ using MelonLoader.Logging;
 
 namespace MelonLoader.Melons;
 
-internal static class MelonFolderHandler
+public static class MelonFolderHandler
 {
     private static bool _firstSpacer;
     private static List<string> _userLibDirs = [];
     private static List<string> _pluginDirs = [];
     private static List<string> _modDirs = [];
+    private static List<string> _fullPathExclusions = [];
 
-    private static List<string> _startExclusions = [
-        "~",
-        "."
+    public enum eNameExclusionType
+    {
+        EXACT_MATCH,
+        STARTS_WITH,
+        ENDS_WITH
+    }
+    private static List<LemonTuple<eNameExclusionType, string>> _nameExclusions = [
+        new(eNameExclusionType.STARTS_WITH, "~"),
+        new(eNameExclusionType.STARTS_WITH, "."),
+
+        new(eNameExclusionType.EXACT_MATCH, "Disabled"),
+        new(eNameExclusionType.EXACT_MATCH, "Broken"),
     ];
 
     internal enum ScanType
@@ -23,6 +33,30 @@ internal static class MelonFolderHandler
         UserLibs,
         Plugins,
         Mods
+    }
+
+    public static void AddNameExclusion(eNameExclusionType type, string param)
+    {
+        if (string.IsNullOrEmpty(param)
+#if NET6_0_OR_GREATER
+            || string.IsNullOrWhiteSpace(param)
+#endif
+            )
+            throw new ArgumentNullException(nameof(param));
+
+        _nameExclusions.Add(new(type, param));
+    }
+
+    public static void AddFullPathExclusion(string path)
+    {
+        if (string.IsNullOrEmpty(path)
+#if NET6_0_OR_GREATER
+            || string.IsNullOrWhiteSpace(path)
+#endif
+            )
+            throw new ArgumentNullException(nameof(path));
+
+        _fullPathExclusions.Add(path);
     }
 
     internal static void ScanForFolders()
@@ -33,9 +67,9 @@ internal static class MelonFolderHandler
         _modDirs.Add(MelonEnvironment.ModsDirectory);
 
         // Scan Base Folders
-        ScanFolder(ScanType.UserLibs, MelonEnvironment.UserLibsDirectory, ref _userLibDirs, ref _pluginDirs, ref _modDirs);
-        ScanFolder(ScanType.Plugins, MelonEnvironment.PluginsDirectory, ref _userLibDirs, ref _pluginDirs, ref _modDirs);
-        ScanFolder(ScanType.Mods, MelonEnvironment.ModsDirectory, ref _userLibDirs, ref _pluginDirs, ref _modDirs);
+        FindSubFolders(ScanType.UserLibs, MelonEnvironment.UserLibsDirectory, true, ref _userLibDirs, ref _pluginDirs, ref _modDirs);
+        FindSubFolders(ScanType.Plugins, MelonEnvironment.PluginsDirectory, true, ref _userLibDirs, ref _pluginDirs, ref _modDirs);
+        FindSubFolders(ScanType.Mods, MelonEnvironment.ModsDirectory, true, ref _userLibDirs, ref _pluginDirs, ref _modDirs);
 
         // Add Directories to Resolver
         foreach (string directory in _userLibDirs)
@@ -43,7 +77,6 @@ internal static class MelonFolderHandler
             MelonUtils.AddNativeDLLDirectory(directory);
             Resolver.MelonAssemblyResolver.AddSearchDirectory(directory);
         }
-
         foreach (string directory in _pluginDirs)
             Resolver.MelonAssemblyResolver.AddSearchDirectory(directory);
         foreach (string directory in _modDirs)
@@ -104,11 +137,29 @@ internal static class MelonFolderHandler
         MelonLogger.Msg(loadingMsg);
     }
 
-    private static bool IsExcluded(string name)
+    private static bool IsNameExcluded(LemonTuple<eNameExclusionType, string> tuple,
+        string name,
+        string nameLower)
+        => tuple.Item1 switch
+        {
+            eNameExclusionType.EXACT_MATCH => ((tuple.Item2 == name) || (tuple.Item2 == nameLower)),
+            eNameExclusionType.STARTS_WITH => (name.StartsWith(tuple.Item2) || nameLower.StartsWith(tuple.Item2)),
+            eNameExclusionType.ENDS_WITH => (name.EndsWith(tuple.Item2) || nameLower.EndsWith(tuple.Item2)),
+            _ => false,
+        };
+
+    private static bool IsExcluded(string path,
+        string name)
     {
-        foreach (string str in _startExclusions)
-            if (name.StartsWith(str))
+        foreach (var exclusion in _fullPathExclusions)
+            if (exclusion == path)
                 return true;
+
+        string nameLower = name.ToLower();
+        foreach (var tuple in _nameExclusions)
+            if (IsNameExcluded(tuple, name, nameLower))
+                return true;
+
         return false;
     }
 
@@ -136,33 +187,42 @@ internal static class MelonFolderHandler
         return loadedMelons;
     }
 
-    private static void ScanFolder(ScanType scanType,
+    private static void AddFolder(ScanType scanType,
         string path,
+        string directoryName,
+        bool require_manifest,
         ref List<string> userLibDirectories,
         ref List<string> pluginDirectories,
         ref List<string> modDirectories)
     {
-        List<string> dirList = scanType switch
+        List<string> dirList = directoryName switch
         {
-            ScanType.UserLibs => userLibDirectories,
-            ScanType.Plugins => pluginDirectories,
-            ScanType.Mods => modDirectories,
-            _ => throw new ArgumentOutOfRangeException(nameof(scanType), scanType, null)
+            // First check for Name Identifier
+            "UserLibs" => userLibDirectories,
+            "Plugins" => pluginDirectories,
+            "Mods" => modDirectories,
+
+            // Last check for ScanType
+            _ => scanType switch
+            {
+                ScanType.UserLibs => userLibDirectories,
+                ScanType.Plugins => pluginDirectories,
+                ScanType.Mods => modDirectories,
+                _ => throw new ArgumentOutOfRangeException(nameof(scanType), scanType, null)
+            }
         };
         dirList.Add(path);
-
-        if (!LoaderConfig.Current.Loader.DisableSubFolderLoad)
-            FindSubFolders(scanType, path, ref userLibDirectories, ref pluginDirectories, ref modDirectories);
+        FindSubFolders(scanType, path, require_manifest, ref userLibDirectories, ref pluginDirectories, ref modDirectories);
     }
 
     private static void FindSubFolders(ScanType scanType,
         string path,
+        bool require_manifest,
         ref List<string> userLibDirectories,
         ref List<string> pluginDirectories,
         ref List<string> modDirectories)
     {
-        string directoryName = Path.GetFileName(path);
-        if (IsExcluded(directoryName))
+        if (!LoaderConfig.Current.Loader.DisableSubFolderLoad)
             return;
 
         // Get Directories
@@ -171,24 +231,25 @@ internal static class MelonFolderHandler
             return;
 
         // Parse Directories
-        foreach (var dir in directories)
+        foreach (var directoryPath in directories)
         {
             // Validate Path
-            if (!Directory.Exists(dir))
+            if (!Directory.Exists(directoryPath))
                 continue;
 
-            directoryName = Path.GetFileName(dir);
-            if (IsExcluded(directoryName))
+            string directoryName = Path.GetFileName(directoryPath);
+            if (IsExcluded(directoryPath, directoryName))
                 continue;
 
-            if (!LoaderConfig.Current.Loader.DisableSubFolderManifest)
+            if (require_manifest 
+                && !LoaderConfig.Current.Loader.DisableSubFolderManifest)
             {
-                string manifestFilePath = Path.Combine(dir, "manifest.json");
+                string manifestFilePath = Path.Combine(directoryPath, "manifest.json");
                 if (!File.Exists(manifestFilePath))
                     continue;
             }
 
-            ScanFolder(scanType, dir, ref userLibDirectories, ref pluginDirectories, ref modDirectories);
+            AddFolder(scanType, directoryPath, directoryName, false, ref userLibDirectories, ref pluginDirectories, ref modDirectories);
         }
     }
 }
