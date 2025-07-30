@@ -61,7 +61,10 @@ namespace MelonLoader.Melons
                 if (asmDef == null)
                     continue;
                 if (isMelon && !asmDef.HasCustomAttribute(typeof(MelonInfoAttribute).FullName))
+				{
+					asmDef.Dispose();
                     continue;
+				}
 
                 // Pull Name and Version from AssemblyDefinitionName
                 string name = $"{asmDef.Name.Name}";

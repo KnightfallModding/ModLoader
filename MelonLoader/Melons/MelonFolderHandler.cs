@@ -45,6 +45,10 @@ public static class MelonFolderHandler
             throw new ArgumentNullException(nameof(param));
 
         _nameExclusions.Add(new(type, param));
+
+        FixExclusions(ref _userLibDirs);
+        FixExclusions(ref _pluginDirs);
+        FixExclusions(ref _modDirs);
     }
 
     public static void AddFullPathExclusion(string path)
@@ -57,6 +61,10 @@ public static class MelonFolderHandler
             throw new ArgumentNullException(nameof(path));
 
         _fullPathExclusions.Add(path);
+
+        FixExclusions(ref _userLibDirs);
+        FixExclusions(ref _pluginDirs);
+        FixExclusions(ref _modDirs);
     }
 
     internal static void ScanForFolders()
@@ -99,6 +107,7 @@ public static class MelonFolderHandler
         if (type == ScanType.Plugins)
         {
             MelonPreprocessor.LoadFolders(_pluginDirs, true, ref hasWroteLine, ref melonAssemblies);
+
             List<MelonPlugin> pluginsLoaded = LoadMelons<MelonPlugin>(melonAssemblies);
             if (hasWroteLine)
                 MelonLogger.WriteSpacer();
@@ -111,6 +120,7 @@ public static class MelonFolderHandler
         if (type == ScanType.Mods)
         {
             MelonPreprocessor.LoadFolders(_modDirs, true, ref hasWroteLine, ref melonAssemblies);
+
             List<MelonMod> modsLoaded = LoadMelons<MelonMod>(melonAssemblies);
             if (hasWroteLine)
                 MelonLogger.WriteSpacer();
@@ -161,6 +171,24 @@ public static class MelonFolderHandler
         return false;
     }
 
+    private static void FixExclusions(ref List<string> paths)
+    {
+        foreach (var dir in paths.ToArray())
+        {
+            // Check for Exclusion
+            string directoryName = Path.GetFileName(dir);
+            if (!IsExcluded(dir, directoryName))
+                continue;
+
+            // Remove Path from Directory List
+            paths.Remove(dir);
+
+            // Remove Path from Resolver
+            Resolver.MelonAssemblyResolver.RemoveSearchDirectory(dir);
+            // TO-DO: Remove Native Library Resolver
+        }
+    }
+
     private static List<T> LoadMelons<T>(List<MelonAssembly> melonAssemblies)
         where T : MelonTypeBase<T>
     {
@@ -193,6 +221,7 @@ public static class MelonFolderHandler
         ref List<string> pluginDirectories,
         ref List<string> modDirectories)
     {
+        // Get Directory List
         List<string> dirList = directoryName switch
         {
             // First check for Name Identifier
@@ -209,7 +238,11 @@ public static class MelonFolderHandler
                 _ => throw new ArgumentOutOfRangeException(nameof(scanType), scanType, null)
             }
         };
+
+        // Add Path to List
         dirList.Add(path);
+
+        // Find Sub Folders
         FindSubFolders(scanType, path, require_manifest, ref userLibDirectories, ref pluginDirectories, ref modDirectories);
     }
 
@@ -235,10 +268,12 @@ public static class MelonFolderHandler
             if (!Directory.Exists(directoryPath))
                 continue;
 
+            // Check for Exclusion
             string directoryName = Path.GetFileName(directoryPath);
             if (IsExcluded(directoryPath, directoryName))
                 continue;
 
+            // Check for manifest.json
             if (require_manifest 
                 && !LoaderConfig.Current.Loader.DisableSubFolderManifest)
             {
@@ -247,6 +282,7 @@ public static class MelonFolderHandler
                     continue;
             }
 
+            // Add Folder
             AddFolder(scanType, directoryPath, directoryName, false, ref userLibDirectories, ref pluginDirectories, ref modDirectories);
         }
     }
