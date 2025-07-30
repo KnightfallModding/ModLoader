@@ -247,21 +247,12 @@ public static class MelonFolderHandler
         };
 
         // Get Directory List
-        List<string> dirList = directoryName switch
+        List<string> dirList = scanType switch
         {
-            // First check for Name Identifier
-            "UserLibs" => userLibDirectories,
-            "Plugins" => pluginDirectories,
-            "Mods" => modDirectories,
-
-            // Last check for ScanType
-            _ => scanType switch
-            {
-                ScanType.UserLibs => userLibDirectories,
-                ScanType.Plugins => pluginDirectories,
-                ScanType.Mods => modDirectories,
-                _ => throw new ArgumentOutOfRangeException(nameof(scanType), scanType, null)
-            }
+            ScanType.UserLibs => userLibDirectories,
+            ScanType.Plugins => pluginDirectories,
+            ScanType.Mods => modDirectories,
+            _ => throw new ArgumentOutOfRangeException(nameof(scanType), scanType, null)
         };
 
         // Add Path to List
