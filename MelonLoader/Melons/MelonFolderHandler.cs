@@ -173,20 +173,33 @@ public static class MelonFolderHandler
 
     private static void FixExclusions(ref List<string> paths)
     {
-        foreach (var dir in paths.ToArray())
+        string[] localList = paths.ToArray();
+        List<string> exclusions = new List<string>();
+
+        foreach (var dir in localList)
         {
             // Check for Exclusion
             string directoryName = Path.GetFileName(dir);
             if (!IsExcluded(dir, directoryName))
                 continue;
-
-            // Remove Path from Directory List
-            paths.Remove(dir);
-
-            // Remove Path from Resolver
-            Resolver.MelonAssemblyResolver.RemoveSearchDirectory(dir);
-            // TO-DO: Remove Native Library Resolver
+            exclusions.Add(dir);
         }
+
+        foreach (var dir in localList)
+            foreach (var exc in exclusions)
+            {
+                // Check for Exclusion
+                if (!dir.Equals(exc)
+                    && !dir.StartsWith(exc))
+                    return;
+
+                // Remove Path from Directory List
+                paths.Remove(dir);
+
+                // Remove Path from Resolver
+                Resolver.MelonAssemblyResolver.RemoveSearchDirectory(dir);
+                // TO-DO: Remove Native Library Resolver
+            }
     }
 
     private static List<T> LoadMelons<T>(List<MelonAssembly> melonAssemblies)
