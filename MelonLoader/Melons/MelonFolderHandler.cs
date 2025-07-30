@@ -234,6 +234,18 @@ public static class MelonFolderHandler
         ref List<string> pluginDirectories,
         ref List<string> modDirectories)
     {
+        // Fix ScanType
+        scanType = directoryName switch
+        {
+            // First check for Name Identifier
+            "UserLibs" => ((scanType >= ScanType.UserLibs) ? ScanType.UserLibs : scanType),
+            "Plugins" => ((scanType >= ScanType.Plugins) ? ScanType.Plugins : scanType),
+            "Mods" => ((scanType >= ScanType.Mods) ? ScanType.Mods : scanType),
+
+            // Last default to no change
+            _ => scanType
+        };
+
         // Get Directory List
         List<string> dirList = directoryName switch
         {
