@@ -22,3 +22,9 @@ jobs:
   upload_nuget:
     name: NuGet
     uses: ./.github/workflows/upload_nuget.yml
+    
+  upload_thunderstore:
+    name: Thunderstore
+    uses: ./.github/workflows/upload_thunderstore.yml
+    with:
+      VERSION: ${{ inputs.VERSION }}
