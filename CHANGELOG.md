@@ -54,6 +54,14 @@
 9. Reimplemented Il2CppInteropFixes
 10. Removed broken ClassInjector.SystemTypeFromIl2CppType Il2CppInterop fix
 11. Fixed an issue with Melon Attribute checks not gracefully failing when an Exception is Thrown
+12. Added AsmResolver.DotNet for Mono and MonoBleedingEdge Games
+13. Fixed an issue with MelonUtils.IsGameIl2Cpp sometimes returning incorrect values
+14. Reimplemented "manifest.json" Requirement for Recursive Melon Subfolder scanning
+15. Implemented Config Options for Subfolder Loading Customization
+16. Exposed "MelonFolderHandler" methods for Custom Melon Folder Exclusion
+17. Fixed an issue with empty strings in "PATH" Environment Variable causing crashes     (Credits to [Squaduck](https://github.com/Squaduck) :D)
+18. Fixed an issue with exposed Melon Folder Exclusion API not working correctly for Plugins
+19. Fixed an issue with Melon Subfolder Parent Context checks using an incorrect ScanType
 
 ---
 
