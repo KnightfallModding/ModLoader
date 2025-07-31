@@ -1,5 +1,11 @@
+env:
+  PACKAGE_NAME: MelonLoader
+  PACKAGE_DESC: The World's First Universal Mod Loader for Unity Games compatible with both Il2Cpp and Mono
+  PACKAGE_REPO: https://github.com/${{ github.repository }}
+
 on:
   workflow_call:
+    inputs:
       VERSION:
         required: true
         type: string
@@ -10,48 +16,42 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup dotnet
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 9.0.x
-        
-      - name: Install Digitalroot.ModUploader
-        run: |
-          dotnet tool install -g Digitalroot.ModUploader
         
       - name: Download Windows x64 Artifact
         uses: actions/download-artifact@v4
         with:
           name: MelonLoader.Windows.x64.CI.Release
-          path: ./compiled_release/windows_x64
+          path: ./compiled_release/thunderstore
           
       - name: Copy Missing Files
         run: |
-          cp icon.png compiled_release/windows_x64/icon.png
-          cp compiled_release/windows_x64/MelonLoader/Documentation/README.md compiled_release/windows_x64/README.md
+          cp icon.png compiled_release/thunderstore/icon.png
+          cp compiled_release/thunderstore/MelonLoader/Documentation/README.md compiled_release/thunderstore/README.md
           
       - name: Generate manifest.json
         run: |
-          cat <<EOF > compiled_release/windows_x64/manifest.json
+          cat <<EOF > compiled_release/thunderstore/manifest.json
           {
-              "name": MelonLoader,
+              "name": "${{ env.PACKAGE_NAME }}",
               "version_number": "${{ inputs.VERSION }}",
-              "website_url": "https://github.com/${{ github.repository }}",
-              "description": "The World's First Universal Mod Loader for Unity Games compatible with both Il2Cpp and Mono",
+              "website_url": "${{ env.PACKAGE_REPO }}",
+              "description": "${{ env.PACKAGE_DESC }}",
               "dependencies": []
           }
           EOF
           
       - name: Package Zip Archive
         run: |
-          cd compiled_release/windows_x64
-          zip -r ../${{ github.repository_owner }}-MelonLoader-${{ inputs.VERSION }}.zip ./
+          cd compiled_release/thunderstore
+          zip -r ../${{ github.repository_owner }}-${{ env.PACKAGE_NAME }}-${{ inputs.VERSION }}.zip ./
           
       - name: Upload to Thunderstore
-        run: |
-          ModUploader \
-            --file ${{ github.repository_owner }}-MelonLoader-${{ inputs.VERSION }}.zip \
-            --token "${{ secrets.THUNDERSTORE_API_KEY }}" \
-            --namespace "${{ github.repository_owner }}" \
-            --community "${{ vars.THUNDERSTORE_COMMUNITY }}"
+        uses: GreenTF/upload-thunderstore-package@v4.3
+        with:
+          community: ${{ vars.THUNDERSTORE_COMMUNITY }}
+          namespace: ${{ github.repository_owner }}
+          name: ${{ env.PACKAGE_NAME }}
+          version: ${{ inputs.VERSION }}
+          description: ${{ env.PACKAGE_DESC }}
+          token: ${{ secrets.THUNDERSTORE_API_KEY }}
+          file: ${{ github.repository_owner }}-${{ env.PACKAGE_NAME }}-${{ inputs.VERSION }}.zip
