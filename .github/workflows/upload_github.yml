@@ -62,7 +62,7 @@ jobs:
         #  curl -L https://github.com/LavaGang/MelonLoader.Installer/releases/latest/download/MelonLoader.Installer.MacOS.x64.zip -o compiled_release/MelonLoader.Installer.MacOS.x64.zip
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           body_path: RELEASE-NOTES.md
           tag: ${{ inputs.TAG }}
