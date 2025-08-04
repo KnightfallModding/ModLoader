@@ -20,6 +20,6 @@
 * Fixed an issue with Melon Subfolder Parent Context checks using an incorrect ScanType
 
 ## New Contributors
-* [@Squaduck](https://github.com/Squaduck) made their first contribution in https://github.com/LavaGang/MelonLoader/pull/970
+* [Squaduck](<https://github.com/Squaduck>) made their first contribution in [#970](<https://github.com/LavaGang/MelonLoader/pull/970>)
 
-**Full Changelog**: https://github.com/LavaGang/MelonLoader/compare/v0.7.1...v0.7.2
+**Full Changelog**: [v0.7.1...v0.7.2](<https://github.com/LavaGang/MelonLoader/compare/v0.7.1...v0.7.2>)
