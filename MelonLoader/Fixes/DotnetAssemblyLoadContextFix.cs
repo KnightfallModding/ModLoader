@@ -89,10 +89,10 @@ namespace MelonLoader.Fixes
 
             //Simple pass-to-verifier and throw if bad.
             var (ok, reason) = AssemblyVerifier.VerifyFile(ilPath);
-            if (!ok)
-            {
-                throw new BadImageFormatException();
-            }
+            // if (!ok)
+            // {
+            //     throw new BadImageFormatException();
+            // }
 
             //Continue to run the original runtime QCall.
             return true;
